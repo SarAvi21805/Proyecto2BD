@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tienda UVG - Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background: #f4f4f4; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        button { padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Sistema de Inventario y Ventas - UVG</h1>
+    
+    <div class="card">
+        <h3>Reportes Requeridos</h3>
+        <button onclick="cargarReporte('join')">1. Ver Productos y Categorías (JOIN)</button>
+        <button onclick="cargarReporte('subquery')">2. Clientes con Compras Altas (Subquery)</button>
+        <button onclick="cargarReporte('group')">3. Ventas por Empleado (Group By)</button>
+        <button onclick="cargarReporte('cte')">4. Top Productos (CTE)</button>
+        <button onclick="cargarReporte('view')">5. Inventario Crítico (VIEW)</button>
+    </div>
+
+    <div class="card">
+        <h3>Resultado del Reporte:</h3>
+        <div id="tabla-contenedor">Selecciona un reporte para ver los datos...</div>
+    </div>
+
+    <script>
+        function cargarReporte(tipo) {
+            fetch(`http://localhost:5000/api/reporte/${tipo}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        document.getElementById('tabla-contenedor').innerHTML = "No hay datos.";
+                        return;
+                    }
+                    let html = '<table><thead><tr>';
+                    Object.keys(data[0]).forEach(key => html += `<th>${key}</th>`);
+                    html += '</tr></thead><tbody>';
+                    data.forEach(row => {
+                        html += '<tr>';
+                        Object.values(row).forEach(val => html += `<td>${val}</td>`);
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('tabla-contenedor').innerHTML = html;
+                });
+        }
+    </script>
+</body>
+</html>

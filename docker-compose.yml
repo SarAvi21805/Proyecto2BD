@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:15
+    container_name: uvg_db_proy2
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/data.sql:/docker-entrypoint-initdb.d/02_data.sql
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: uvg_backend_proy2
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+
+  frontend:
+    image: nginx:alpine
+    container_name: uvg_frontend_proy2
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+
+volumes:
+  postgres_data: {}
