@@ -2,53 +2,204 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Tienda UVG - Dashboard</title>
+    <title>Tienda UVG - Sistema de Gestión</title>
     <style>
-        body { font-family: sans-serif; margin: 20px; background: #f4f4f4; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #007bff; color: white; }
-        button { padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px; }
+        :root { --uvg-blue: #007bff; --uvg-dark: #343a40; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; background: #f4f7f6; color: #333; }
+        .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: var(--uvg-dark); border-bottom: 3px solid var(--uvg-blue); padding-bottom: 10px; }
+        h2 { color: var(--uvg-blue); font-size: 1.2rem; }
+        
+        /* Formulario Estilizado */
+        .form-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+        input:focus { border-color: var(--uvg-blue); }
+        
+        /* Botones Estilizados */
+        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-main { background: var(--uvg-blue); color: white; }
+        .btn-main:hover { background: #0056b3; }
+        .btn-outline { background: white; color: var(--uvg-blue); border: 1px solid var(--uvg-blue); }
+        .btn-outline:hover { background: #e7f1ff; }
+        .btn-delete { background: #ff4d4d; color: white; padding: 5px 10px; font-size: 0.8rem; }
+
+        /* Tablas Diseño */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; overflow: hidden; border-radius: 8px; }
+        th { background: var(--uvg-blue); color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f9f9f9; }
+
+        .status-msg { padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: bold; display: none; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <h1>Sistema de Inventario y Ventas - UVG</h1>
-    
+
+    <h1>PROYECTO 2 - Alejandra Avilés (24722)</h1>
+
+    <!-- GESTIÓN DE CLIENTES (CRUD 1) -->
     <div class="card">
-        <h3>Reportes Requeridos</h3>
-        <button onclick="cargarReporte('join')">1. Ver Productos y Categorías (JOIN)</button>
-        <button onclick="cargarReporte('subquery')">2. Clientes con Compras Altas (Subquery)</button>
-        <button onclick="cargarReporte('group')">3. Ventas por Empleado (Group By)</button>
-        <button onclick="cargarReporte('cte')">4. Top Productos (CTE)</button>
-        <button onclick="cargarReporte('view')">5. Inventario Crítico (VIEW)</button>
+        <h2>👥 Gestión de Clientes</h2>
+        <div class="form-group">
+            <input type="text" id="cli-nom" placeholder="Nombre completo">
+            <input type="text" id="cli-nit" placeholder="NIT (Único)">
+            <input type="text" id="cli-mail" placeholder="Correo electrónico">
+            <button class="btn-main" onclick="crearCliente()">+ Crear Cliente</button>
+        </div>
+        <button class="btn-outline" onclick="toggleView('res-clientes')">Ver / Ocultar Lista</button>
+        <div id="res-clientes" class="hidden"></div>
     </div>
 
+    <!-- GESTIÓN DE PRODUCTOS (CRUD 2) -->
     <div class="card">
-        <h3>Resultado del Reporte:</h3>
-        <div id="tabla-contenedor">Selecciona un reporte para ver los datos...</div>
+        <h2>📦 Gestión de Inventario</h2>
+        <div class="form-group">
+            <input type="text" id="prod-nom" placeholder="Nombre Producto">
+            <input type="number" id="prod-stock" placeholder="Stock">
+            <input type="number" id="prod-precio" placeholder="Precio">
+            <button class="btn-main" onclick="crearProducto()">💾 Guardar Producto</button>
+        </div>
+        <button class="btn-outline" onclick="toggleView('res-productos')">Ver / Ocultar Inventario</button>
+        <div id="res-productos" class="hidden"></div>
+    </div>
+
+    <!-- TRANSACCIÓN VENTA -->
+    <div class="card" style="border-left: 8px solid #ffc107;">
+        <h2>🛒 Nueva Venta (Transacción con ROLLBACK)</h2>
+        <div class="form-group">
+            <input type="number" id="v-id" placeholder="ID Producto">
+            <input type="number" id="v-cant" placeholder="Cantidad">
+            <button style="background:#ffc107; color:black" onclick="procesarVenta()">Ejecutar Venta (BEGIN/COMMIT)</button>
+        </div>
+        <div id="v-msg" class="status-msg"></div>
+    </div>
+
+    <!-- REPORTES -->
+    <div class="card">
+        <h2>📊 Reportes Especiales (SQL Explícito)</h2>
+        <button class="btn-outline" onclick="cargarReporte('join')">JOIN</button>
+        <button class="btn-outline" onclick="cargarReporte('subquery')">SUBQUERY</button>
+        <button class="btn-outline" onclick="cargarReporte('group')">GROUP BY</button>
+        <button class="btn-outline" onclick="cargarReporte('cte')">CTE (WITH)</button>
+        <button class="btn-outline" onclick="cargarReporte('view')">VIEW</button>
+        <div id="res-reportes"></div>
     </div>
 
     <script>
-        function cargarReporte(tipo) {
-            fetch(`http://localhost:5000/api/reporte/${tipo}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        document.getElementById('tabla-contenedor').innerHTML = "No hay datos.";
-                        return;
-                    }
-                    let html = '<table><thead><tr>';
-                    Object.keys(data[0]).forEach(key => html += `<th>${key}</th>`);
-                    html += '</tr></thead><tbody>';
-                    data.forEach(row => {
-                        html += '<tr>';
-                        Object.values(row).forEach(val => html += `<td>${val}</td>`);
-                        html += '</tr>';
-                    });
-                    html += '</tbody></table>';
-                    document.getElementById('tabla-contenedor').innerHTML = html;
-                });
+        const API = 'http://localhost:5000/api';
+
+        function toggleView(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                if (id === 'res-clientes') listarClientes();
+                if (id === 'res-productos') listarProductos();
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        async function crearCliente() {
+            const nom = document.getElementById('cli-nom').value;
+            const nit = document.getElementById('cli-nit').value;
+            if(!nom || !nit) return alert("Nombre y NIT son obligatorios");
+
+            const r = await fetch(`${API}/clientes`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ nombre: nom, nit: nit, correo: document.getElementById('cli-mail').value }) 
+            });
+            const res = await r.json();
+            alert(res.message || res.error);
+            if(!res.error) {
+                document.getElementById('cli-nom').value = '';
+                document.getElementById('cli-nit').value = '';
+                document.getElementById('cli-mail').value = '';
+                listarClientes();
+            }
+        }
+
+        async function listarClientes() {
+            const r = await fetch(`${API}/clientes`);
+            const data = await r.json();
+            let h = '<table><tr><th>ID</th><th>Nombre</th><th>NIT</th><th>Acción</th></tr>';
+            data.forEach(c => h += `<tr><td>${c.id}</td><td>${c.nombre}</td><td>${c.nit}</td><td><button class="btn-delete" onclick="eliminarCliente(${c.id})">Eliminar</button></td></tr>`);
+            document.getElementById('res-clientes').innerHTML = h + '</table>';
+        }
+
+        async function eliminarCliente(id) {
+            const r = await fetch(`${API}/clientes/${id}`, {method: 'DELETE'});
+            const res = await r.json();
+            alert(res.message || res.error);
+            listarClientes();
+        }
+
+        async function crearProducto() {
+            const nom = document.getElementById('prod-nom').value;
+            const stock = document.getElementById('prod-stock').value;
+            const precio = document.getElementById('prod-precio').value;
+            if(!nom || !stock || !precio) return alert("Todos los campos son obligatorios");
+
+            const r = await fetch(`${API}/productos`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ nombre: nom, stock: stock, precio: precio }) 
+            });
+            const res = await r.json();
+            alert(res.message || res.error);
+            if(!res.error) {
+                document.getElementById('prod-nom').value = '';
+                document.getElementById('prod-stock').value = '';
+                document.getElementById('prod-precio').value = '';
+                listarProductos();
+            }
+        }
+
+        async function listarProductos() {
+            const r = await fetch(`${API}/productos`);
+            const data = await r.json();
+            let h = '<table><tr><th>ID</th><th>Nombre</th><th>Stock</th><th>Precio</th></tr>';
+            data.forEach(p => h += `<tr><td>${p.id}</td><td>${p.nombre}</td><td>${p.stock}</td><td>Q${p.precio}</td></tr>`);
+            document.getElementById('res-productos').innerHTML = h + '</table>';
+        }
+
+        async function procesarVenta() {
+            const id = document.getElementById('v-id').value;
+            const cant = document.getElementById('v-cant').value;
+            if(!id || !cant) return alert("Ingresa ID y cantidad");
+
+            const r = await fetch(`${API}/transaccion_venta`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ id_producto: id, cantidad: cant }) 
+            });
+            const res = await r.json();
+            const msg = document.getElementById('v-msg');
+            msg.style.display = 'block';
+            msg.className = 'status-msg ' + (res.error ? 'error' : 'success');
+            msg.innerText = res.message || "ROLLBACK: " + res.error;
+            
+            if(!res.error) {
+                document.getElementById('v-id').value = '';
+                document.getElementById('v-cant').value = '';
+            }
+        }
+
+        async function cargarReporte(t) {
+            const r = await fetch(`${API}/reporte/${t}`);
+            const data = await r.json();
+            if (data.length === 0) return document.getElementById('res-reportes').innerHTML = "<p>No hay datos.</p>";
+            let h = '<table><tr>';
+            Object.keys(data[0]).forEach(k => h += `<th>${k}</th>`);
+            h += '</tr>';
+            data.forEach(row => {
+                h += '<tr>';
+                Object.values(row).forEach(v => h += `<td>${v}</td>`);
+                h += '</tr>';
+            });
+            document.getElementById('res-reportes').innerHTML = h + '</table>';
         }
     </script>
 </body>
