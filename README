@@ -1,4 +1,22 @@
-# Proyecto 2
-# Bases de Datos
-# Alejandra Saraí Avilés González
-# 24722
+# Proyecto 2 - Bases de Datos 1 (UVG)
+**Nombre:** Alejandra Avilés
+**Carnet:** 24722
+
+## Descripción
+Aplicación web para gestión de inventario y ventas utilizando Docker, PostgreSQL y Python (Flask). El proyecto cumple con la normalización 3FN y utiliza SQL explícito para todas las operaciones.
+
+## Requisitos de la Rúbrica cumplidos:
+- **Base de Datos:** Diseño en 3FN, DDL completo e índices.
+- **SQL:** Consultas con JOIN, Subqueries, Group By, CTE y Views.
+- **Transacciones:** Implementación de BEGIN/COMMIT/ROLLBACK en el proceso de ventas.
+- **App Web:** CRUD de Clientes y Productos, reportes visibles y manejo de errores.
+- **Infraestructura:** Despliegue total mediante Docker Compose.
+
+## Instrucciones para levantar el proyecto
+1. Asegúrese de tener Docker Desktop iniciado
+2. Clonar el repositorio.
+3. Asegurarse de tener un archivo `.env` basado en `.env.example`.
+4. Ejecutar el siguiente comando en la terminal:
+   ```bash
+   docker compose up --build
+5. Ingrese a http://localhost:8080 para acceder a la aplicación web.
