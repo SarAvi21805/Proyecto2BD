@@ -19,4 +19,5 @@ Aplicación web para gestión de inventario y ventas utilizando Docker, PostgreS
 4. Ejecutar el siguiente comando en la terminal:
    ```bash
    docker compose up --build
+   ```
 5. Ingrese a http://localhost:8080 para acceder a la aplicación web.
