@@ -44,7 +44,6 @@ export const Productos = () => {
             <tr style={{ background: '#f8f9fa' }}>
               <th style={thStyle}>Producto</th>
               <th style={thStyle}>Categoría</th>
-              <th style={thStyle}>Proveedor</th>
               <th style={thStyle}>Stock</th>
             </tr>
           </thead>
