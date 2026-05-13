@@ -31,7 +31,7 @@ export const Productos = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-           📦 Inventario de Productos 📦
+          📦 Inventario de Productos 📦
         </h1>
         <button onClick={fetchProductos} style={btnStyle}>
           <RefreshCw size={16} /> Actualizar
@@ -51,11 +51,10 @@ export const Productos = () => {
           <tbody>
             {productos.map((p, index) => (
               <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={tdStyle}>{p.Producto}</td>
-                <td style={tdStyle}>{p.Categoría}</td>
-                <td style={tdStyle}>{p.Proveedor}</td>
-                <td style={{ ...tdStyle, fontWeight: 'bold', color: p.Stock < 20 ? '#dc3545' : '#28a745' }}>
-                  {p.Stock}
+                <td>{p.nombre_producto}</td>
+                <td>{p.nombre_categoria}</td>
+                <td style={{ fontWeight: 'bold', color: p.stock_actual < 50 ? '#dc3545' : '#28a745' }}>
+                  {p.stock_actual}
                 </td>
               </tr>
             ))}
