@@ -25,12 +25,12 @@ services:
       - .env
 
   frontend:
-    image: nginx:alpine
+    build: ./frontend
     container_name: uvg_frontend_proy2
     ports:
       - "8080:80"
-    volumes:
-      - ./frontend:/usr/share/nginx/html
+    depends_on:
+      - backend
 
 volumes:
   postgres_data: {}
