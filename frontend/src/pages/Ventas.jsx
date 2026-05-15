@@ -86,6 +86,19 @@ export const Ventas = () => {
   );
 };
 
+const agregarAlCarrito = () => {
+  // Validación de datos a ingresar en los campos antes del carrito
+  if (!item.id || !item.cant || isNaN(item.id) || isNaN(item.cant)) {
+    return alert("Por favor ingresa IDs y cantidades numéricas válidas");
+  }
+  if (parseInt(item.cant) <= 0) {
+    return alert("La cantidad debe ser mayor a cero");
+  }
+
+  dispatch({type:'ADD', payload:item}); 
+  setItem({id:'', cant:''}); 
+};
+
 // Estilos
 const cardStyle = { background: 'white', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '25px' };
 const inputStyle = { padding: '12px', border: '1px solid #ddd', borderRadius: '8px', flex: 1 };
