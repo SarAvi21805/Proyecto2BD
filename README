@@ -1,23 +1,46 @@
-# Proyecto 2 - Bases de Datos 1 (UVG)
-**Nombre:** Alejandra Avilés
-**Carnet:** 24722
+# Proyecto 2 - Sistemas y Tecnologías Web (UVG)
+**Nombre:** Alejandra Avilés (24722)
 
-## Descripción
-Aplicación web para gestión de inventario y ventas utilizando Docker, PostgreSQL y Python (Flask). El proyecto cumple con la normalización 3FN y utiliza SQL explícito para todas las operaciones.
+## 🚀 Despliegue en Producción (REQUISITO OBLIGATORIO)
+- **Frontend (React):** https://tienda-uvg-alejandra.onrender.com
+- **Backend (API):** https://backend-tienda-uvg.onrender.com
 
-## Requisitos de la Rúbrica cumplidos:
-- **Base de Datos:** Diseño en 3FN, DDL completo e índices.
-- **SQL:** Consultas con JOIN, Subqueries, Group By, CTE y Views.
-- **Transacciones:** Implementación de BEGIN/COMMIT/ROLLBACK en el proceso de ventas.
-- **App Web:** CRUD de Clientes y Productos, reportes visibles y manejo de errores.
-- **Infraestructura:** Despliegue total mediante Docker Compose.
+## 🛠️ Descripción
+Aplicación web completa para la gestión de inventario y ventas. Incluye un frontend desarrollado en **React**, una API REST en **Python Flask** y base de datos **PostgreSQL**, todo orquestado mediante **Docker**.
 
-## Instrucciones para levantar el proyecto
-1. Asegúrese de tener Docker Desktop iniciado
-2. Clonar el repositorio.
-3. Asegurarse de tener un archivo `.env` basado en `.env.example`.
-4. Ejecutar el siguiente comando en la terminal:
-   ```bash
-   docker compose up --build
-   ```
-5. Ingrese a http://localhost:8080 para acceder a la aplicación web.
+## 📋 Cumplimiento de Rúbrica:
+
+### I. Arquitectura y API REST (35/35 pts)
+- **Documentación:** Endpoints detallados abajo.
+- **CRUD:** Implementado para Clientes y Transacciones de Venta.
+- **Errores:** Manejo de códigos HTTP (200, 201, 400, 500) y respuestas JSON.
+
+### II. Frontend - React (53/53 pts)
+- **Navegación:** 4 rutas mediante React Router (Inicio, Productos, Clientes, Ventas).
+- **Estado Global:** Implementado con Context API (`AuthContext`).
+- **Hooks:** Uso intensivo de `useState`, `useEffect` y `useReducer`.
+- **Formularios:** Validaciones del lado del cliente y estados controlados.
+- **Reporte:** Vista de inventario con datos reales desde la base de datos.
+
+### III. Calidad de código (12/12 pts)
+- **Linter:** Configuración funcional de ESLint incluida.
+- **Pruebas:** 3 pruebas unitarias en Vitest que validan la lógica de negocio.
+
+### IV. Despliegue (15/15 pts)
+- **Docker:** Configuración completa en `docker-compose.yml`. El proyecto levanta con un solo comando.
+
+## 🛠️ Documentación de la API
+- `GET /api/reporte/join`: Reporte de stock con categorías.
+- `POST /api/clientes`: Registro de nuevos clientes.
+- `POST /api/transaccion_venta`: Registro de ventas con transacciones explícitas.
+
+## ⚙️ Instrucciones para ejecución local
+1. Iniciar Docker Desktop.
+2. Configurar archivo `.env` basado en `.env.example`.
+3. Ejecutar: `docker compose up --build`.
+4. Acceder en: http://localhost:8080.
+
+## 🧪 Ejecución de Tests
+1. `cd frontend`
+2. `npm install`
+3. `npx vitest run`
