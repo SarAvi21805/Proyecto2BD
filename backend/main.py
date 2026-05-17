@@ -9,6 +9,12 @@ app = Flask(__name__)
 CORS(app)
 
 def get_db_connection():
+    # RENDER
+    db_url = os.getenv('DATABASE_URL')
+    if db_url:
+        return psycopg2.connect(db_url)
+
+    # DOCKER LCOCAL
     return psycopg2.connect(
         host=os.getenv('DB_HOST'),
         database=os.getenv('DB_NAME'),
