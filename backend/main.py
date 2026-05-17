@@ -109,7 +109,7 @@ def del_cli(id):
 def reportes(tipo):
     conn = get_db_connection(); cur = conn.cursor()
     queries = {
-        'join': 'SELECT p.id_producto, p.nombre_producto, c.nombre_categoria, p.stock_actual FROM productos p JOIN categorias c ON p.id_categoria = c.id_categoria ORDER BY p.id_product ASC LIMIT 10',
+        'join': 'SELECT p.id_producto, p.nombre_producto, c.nombre_categoria, p.stock_actual FROM productos p JOIN categorias c ON p.id_categoria = c.id_categoria ORDER BY p.id_producto ASC LIMIT 10',
         'subquery': 'SELECT nombre_cliente FROM clientes WHERE id_cliente IN (SELECT id_cliente FROM ventas WHERE total_venta > (SELECT AVG(total_venta) FROM ventas))',
         'group': 'SELECT puesto, COUNT(*) FROM empleados GROUP BY puesto',
         'cte': 'WITH v AS (SELECT id_producto, SUM(cantidad_venta) as t FROM detalle_ventas GROUP BY id_producto) SELECT p.nombre_producto, v.t FROM productos p JOIN v ON p.id_producto = v.id_producto ORDER BY v.t DESC LIMIT 5',
