@@ -1,3 +1,28 @@
+-- 0. ROLES Y PERMISOS EN BASE DE DATOS
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_ventas') THEN
+        CREATE ROLE rol_ventas NOLOGIN;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_inventario') THEN
+        CREATE ROLE rol_inventario NOLOGIN;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_clientes') THEN
+        CREATE ROLE rol_clientes NOLOGIN;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_reportes') THEN
+        CREATE ROLE rol_reportes NOLOGIN;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'proy3') THEN
+        CREATE ROLE proy3 LOGIN PASSWORD 'secret';
+    ELSE
+        ALTER ROLE proy3 WITH LOGIN PASSWORD 'secret';
+    END IF;
+END $$;
+
+-- El usuario de aplicación hereda los roles de negocio.
+GRANT rol_ventas, rol_inventario, rol_clientes, rol_reportes TO proy3;
+
 -- 1. TABLAS BASE (SIN FK)
 
 CREATE TABLE categorias (
@@ -94,13 +119,118 @@ CREATE TABLE detalle_ventas (
         FOREIGN KEY(id_producto) REFERENCES productos(id_producto)
 );
 
--- 4. DEFINICIÓN DE ÍNDICES
+-- 4. PROCEDIMIENTOS ALMACENADOS
+
+CREATE OR REPLACE FUNCTION fn_crear_cliente(
+    p_nombre TEXT,
+    p_nit TEXT,
+    p_correo TEXT
+) RETURNS INT AS $$
+DECLARE
+    v_id INT;
+BEGIN
+    INSERT INTO clientes (nombre_cliente, nit_fiscal, correo)
+    VALUES (p_nombre, p_nit, p_correo)
+    RETURNING id_cliente INTO v_id;
+    RETURN v_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION fn_crear_producto(
+    p_nombre TEXT,
+    p_precio_costo NUMERIC,
+    p_precio_venta NUMERIC,
+    p_stock INT,
+    p_id_categoria INT,
+    p_id_proveedor INT
+) RETURNS INT AS $$
+DECLARE
+    v_id INT;
+BEGIN
+    INSERT INTO productos (
+        nombre_producto, precio_costo, precio_venta, stock_actual, id_categoria, id_proveedor
+    ) VALUES (
+        p_nombre, p_precio_costo, p_precio_venta, p_stock, p_id_categoria, p_id_proveedor
+    ) RETURNING id_producto INTO v_id;
+    RETURN v_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION fn_registrar_venta(
+    p_id_cliente INT,
+    p_id_empleado INT,
+    p_id_producto INT,
+    p_cantidad INT
+) RETURNS INT AS $$
+DECLARE
+    v_stock INT;
+    v_precio NUMERIC(10,2);
+    v_total NUMERIC(10,2);
+    v_id_venta INT;
+BEGIN
+    SELECT stock_actual, precio_venta INTO v_stock, v_precio
+    FROM productos
+    WHERE id_producto = p_id_producto;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Producto no existe';
+    END IF;
+
+    IF v_stock < p_cantidad THEN
+        RAISE EXCEPTION 'Stock insuficiente (Solo hay %)', v_stock;
+    END IF;
+
+    v_total := v_precio * p_cantidad;
+
+    INSERT INTO ventas (total_venta, id_cliente, id_empleado)
+    VALUES (v_total, p_id_cliente, p_id_empleado)
+    RETURNING id_venta INTO v_id_venta;
+
+    INSERT INTO detalle_ventas (
+        cantidad_venta, precio_unitario_venta, subtotal, id_venta, id_producto
+    ) VALUES (
+        p_cantidad, v_precio, v_total, v_id_venta, p_id_producto
+    );
+
+    UPDATE productos
+    SET stock_actual = stock_actual - p_cantidad
+    WHERE id_producto = p_id_producto;
+
+    RETURN v_id_venta;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5. VISTAS Y REPORTES
+
+CREATE OR REPLACE VIEW vista_stock_bajo AS
+SELECT nombre_producto, stock_actual
+FROM productos
+WHERE stock_actual < 50;
+
+-- 6. DEFINICIÓN DE ÍNDICES
 
 -- Justificación: Acelera la búsqueda de productos en la interfaz web por nombre.
-CREATE INDEX idx_producto_nombre ON PRODUCTOS(nombre_producto);
+CREATE INDEX idx_producto_nombre ON productos(nombre_producto);
 
 -- Justificación: Optimiza la generación de reportes de ventas filtrados por fechas.
-CREATE INDEX idx_ventas_fecha ON VENTAS(fecha_venta);
+CREATE INDEX idx_ventas_fecha ON ventas(fecha_venta);
 
 -- Justificación: Mejora la velocidad de login al buscar por usuario de empleado.
-CREATE INDEX idx_empleado_usuario ON EMPLEADOS(usuario);
+CREATE INDEX idx_empleado_usuario ON empleados(usuario);
+
+-- 7. PERMISOS GRANULARES POR ROL
+
+GRANT CONNECT ON DATABASE tienda_db TO rol_ventas, rol_inventario, rol_clientes, rol_reportes, proy3;
+GRANT USAGE ON SCHEMA public TO rol_ventas, rol_inventario, rol_clientes, rol_reportes, proy3;
+
+GRANT SELECT, INSERT, UPDATE ON productos TO rol_inventario, proy3;
+GRANT SELECT ON categorias, proveedores TO rol_inventario, rol_ventas, rol_reportes, proy3;
+GRANT SELECT ON empleados TO rol_ventas, rol_reportes, proy3;
+GRANT SELECT ON clientes TO rol_clientes, rol_ventas, rol_reportes, proy3;
+GRANT SELECT, INSERT ON clientes TO rol_clientes, proy3;
+GRANT SELECT, INSERT ON ventas, detalle_ventas TO rol_ventas, proy3;
+GRANT SELECT, INSERT ON compras, detalle_compras TO rol_inventario, proy3;
+GRANT EXECUTE ON FUNCTION fn_crear_cliente(TEXT, TEXT, TEXT) TO rol_clientes, rol_ventas, proy3;
+GRANT EXECUTE ON FUNCTION fn_crear_producto(TEXT, NUMERIC, NUMERIC, INT, INT, INT) TO rol_inventario, proy3;
+GRANT EXECUTE ON FUNCTION fn_registrar_venta(INT, INT, INT, INT) TO rol_ventas, proy3;
+GRANT SELECT ON vista_stock_bajo TO rol_reportes, proy3;

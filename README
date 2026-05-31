@@ -1,46 +1,75 @@
-# Proyecto 2 - Sistemas y Tecnologías Web (UVG)
+# Proyecto 3 - Tienda UVG
 **Nombre:** Alejandra Avilés (24722)
 
-## 🚀 Despliegue en Producción (REQUISITO OBLIGATORIO)
-- **Frontend (React):** https://tienda-uvg-alejandra.onrender.com
-- **Backend (API):** https://backend-tienda-uvg.onrender.com
+## 🧩 Descripción del proyecto
+Este proyecto extiende la aplicación de gestión de inventario y ventas para incorporar seguridad a nivel de base de datos con:
+- roles y permisos en PostgreSQL,
+- stored procedures obligatorios,
+- ORM obligatorio para CRUD,
+- transacciones explícitas,
+- despliegue completo con Docker Compose.
 
-## 🛠️ Descripción
-Aplicación web completa para la gestión de inventario y ventas. Incluye un frontend desarrollado en **React**, una API REST en **Python Flask** y base de datos **PostgreSQL**, todo orquestado mediante **Docker**.
+## ✅ Cambios de Proyecto 3
+- Base de datos: **PostgreSQL** con roles definidos en `database/schema.sql`.
+- Usuario fijo para calificación: **proy3** / **secret**.
+- ORM: **SQLAlchemy** en el backend.
+- Stored procedures: `fn_registrar_venta`, `fn_crear_cliente`, `fn_crear_producto`.
+- Roles de negocio definidos:
+  - `rol_ventas`
+  - `rol_inventario`
+  - `rol_clientes`
+  - `rol_reportes`
+  - `proy3` (login)
+- Permisos granulares asignados con `GRANT`.
+- Docker Compose obligatorio y `docker compose up --build` funcional.
 
-## 📋 Cumplimiento de Rúbrica:
+## 📦 Arquitectura
+- `frontend/`: app React con Vite.
+- `backend/`: API Flask + SQLAlchemy.
+- `database/`: scripts SQL para esquema, datos, roles y stored procedures.
+- `docker-compose.yml`: orquesta `db`, `backend` y `frontend`.
 
-### I. Arquitectura y API REST (35/35 pts)
-- **Documentación:** Endpoints detallados abajo.
-- **CRUD:** Implementado para Clientes y Transacciones de Venta.
-- **Errores:** Manejo de códigos HTTP (200, 201, 400, 500) y respuestas JSON.
+## 🔧 Ejecución desde cero
+1. Copiar `.env.example` a `.env`.
+2. Si hay datos antiguos, limpiar volúmenes:
+   ```bash
+   docker compose down -v
+   ```
+3. Levantar todo:
+   ```bash
+   docker compose up --build
+   ```
+4. Abrir la aplicación en:
+   - Frontend: `http://localhost:8080`
+   - Backend: `http://localhost:5000/api`
 
-### II. Frontend - React (53/53 pts)
-- **Navegación:** 4 rutas mediante React Router (Inicio, Productos, Clientes, Ventas).
-- **Estado Global:** Implementado con Context API (`AuthContext`).
-- **Hooks:** Uso intensivo de `useState`, `useEffect` y `useReducer`.
-- **Formularios:** Validaciones del lado del cliente y estados controlados.
-- **Reporte:** Vista de inventario con datos reales desde la base de datos.
+## 🌐 Endpoints principales
+- `GET /api/productos`
+- `POST /api/productos`
+- `GET /api/clientes`
+- `POST /api/clientes`
+- `DELETE /api/clientes/:id`
+- `POST /api/transaccion_venta`
+- `GET /api/reporte/join`
+- `GET /api/reporte/subquery`
+- `GET /api/reporte/group`
+- `GET /api/reporte/cte`
+- `GET /api/reporte/view`
 
-### III. Calidad de código (12/12 pts)
-- **Linter:** Configuración funcional de ESLint incluida.
-- **Pruebas:** 3 pruebas unitarias en Vitest que validan la lógica de negocio.
+## 🛡️ Seguridad a nivel de base de datos
+- Roles creados con `CREATE ROLE` en `database/schema.sql`.
+- Permisos asignados solo a los roles necesarios.
+- Stored procedures con `SECURITY DEFINER` para operaciones críticas.
+- Transacciones explícitas en backend con `SQLAlchemy`.
 
-### IV. Despliegue (15/15 pts)
-- **Docker:** Configuración completa en `docker-compose.yml`. El proyecto levanta con un solo comando.
+## 📁 Archivos importantes
+- `backend/main.py`
+- `backend/models.py`
+- `database/schema.sql`
+- `.env.example`
+- `docker-compose.yml`
 
-## 🛠️ Documentación de la API
-- `GET /api/reporte/join`: Reporte de stock con categorías.
-- `POST /api/clientes`: Registro de nuevos clientes.
-- `POST /api/transaccion_venta`: Registro de ventas con transacciones explícitas.
-
-## ⚙️ Instrucciones para ejecución local
-1. Iniciar Docker Desktop.
-2. Configurar archivo `.env` basado en `.env.example`.
-3. Ejecutar: `docker compose up --build`.
-4. Acceder en: http://localhost:8080.
-
-## 🧪 Ejecución de Tests
+## 🧪 Pruebas
 1. `cd frontend`
 2. `npm install`
 3. `npx vitest run`
