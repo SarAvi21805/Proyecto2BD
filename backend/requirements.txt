@@ -1,5 +1,7 @@
 psycopg2-binary
+PyJWT
 SQLAlchemy
 flask
 python-dotenv
 flask-cors
+pytest

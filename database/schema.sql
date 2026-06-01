@@ -13,6 +13,9 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_reportes') THEN
         CREATE ROLE rol_reportes NOLOGIN;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'rol_gerente') THEN
+        CREATE ROLE rol_gerente NOLOGIN;
+    END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'proy3') THEN
         CREATE ROLE proy3 LOGIN PASSWORD 'secret';
     ELSE
@@ -21,7 +24,7 @@ BEGIN
 END $$;
 
 -- El usuario de aplicación hereda los roles de negocio.
-GRANT rol_ventas, rol_inventario, rol_clientes, rol_reportes TO proy3;
+GRANT rol_ventas, rol_inventario, rol_clientes, rol_reportes, rol_gerente TO proy3;
 
 -- 1. TABLAS BASE (SIN FK)
 
@@ -50,7 +53,8 @@ CREATE TABLE empleados (
     nombre_empleado VARCHAR(150) NOT NULL,
     puesto VARCHAR(100),
     usuario VARCHAR(50) UNIQUE NOT NULL,
-    contrasena VARCHAR(255) NOT NULL
+    contrasena VARCHAR(255) NOT NULL,
+    rol_app VARCHAR(50) NOT NULL
 );
 
 -- 2. TABLAS DEPENDIENTES
@@ -200,6 +204,93 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION fn_eliminar_cliente(
+    p_id_cliente INT
+) RETURNS INT AS $$
+DECLARE
+    v_deleted INT;
+BEGIN
+    DELETE FROM clientes WHERE id_cliente = p_id_cliente
+    RETURNING id_cliente INTO v_deleted;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Cliente no encontrado';
+    END IF;
+
+    RETURN v_deleted;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION fn_reporte_stock_bajo()
+RETURNS TABLE(nombre_producto TEXT, stock_actual INT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT nombre_producto, stock_actual
+    FROM productos
+    WHERE stock_actual < 50;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE PROCEDURE sp_registrar_venta_proc(
+    p_id_cliente INT,
+    p_id_empleado INT,
+    p_id_producto INT,
+    p_cantidad INT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_stock INT;
+    v_precio NUMERIC(10,2);
+    v_total NUMERIC(10,2);
+    v_id_venta INT;
+BEGIN
+    SELECT stock_actual, precio_venta INTO v_stock, v_precio
+    FROM productos
+    WHERE id_producto = p_id_producto;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Producto no existe';
+    END IF;
+
+    IF v_stock < p_cantidad THEN
+        RAISE EXCEPTION 'Stock insuficiente (Solo hay %)', v_stock;
+    END IF;
+
+    v_total := v_precio * p_cantidad;
+
+    INSERT INTO ventas (total_venta, id_cliente, id_empleado)
+    VALUES (v_total, p_id_cliente, p_id_empleado)
+    RETURNING id_venta INTO v_id_venta;
+
+    INSERT INTO detalle_ventas (
+        cantidad_venta, precio_unitario_venta, subtotal, id_venta, id_producto
+    ) VALUES (
+        p_cantidad, v_precio, v_total, v_id_venta, p_id_producto
+    );
+
+    UPDATE productos
+    SET stock_actual = stock_actual - p_cantidad
+    WHERE id_producto = p_id_producto;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_obtener_cliente_info(
+    p_id_cliente INT
+) RETURNS TABLE(nombre TEXT, nit TEXT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT nombre_cliente, nit_fiscal
+    FROM clientes
+    WHERE id_cliente = p_id_cliente;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Cliente no encontrado';
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- 5. VISTAS Y REPORTES
 
 CREATE OR REPLACE VIEW vista_stock_bajo AS
@@ -220,17 +311,24 @@ CREATE INDEX idx_empleado_usuario ON empleados(usuario);
 
 -- 7. PERMISOS GRANULARES POR ROL
 
-GRANT CONNECT ON DATABASE tienda_db TO rol_ventas, rol_inventario, rol_clientes, rol_reportes, proy3;
-GRANT USAGE ON SCHEMA public TO rol_ventas, rol_inventario, rol_clientes, rol_reportes, proy3;
+GRANT CONNECT ON DATABASE tienda_db TO rol_ventas, rol_inventario, rol_clientes, rol_reportes, rol_gerente, proy3;
+GRANT USAGE ON SCHEMA public TO rol_ventas, rol_inventario, rol_clientes, rol_reportes, rol_gerente, proy3;
 
-GRANT SELECT, INSERT, UPDATE ON productos TO rol_inventario, proy3;
-GRANT SELECT ON categorias, proveedores TO rol_inventario, rol_ventas, rol_reportes, proy3;
-GRANT SELECT ON empleados TO rol_ventas, rol_reportes, proy3;
-GRANT SELECT ON clientes TO rol_clientes, rol_ventas, rol_reportes, proy3;
-GRANT SELECT, INSERT ON clientes TO rol_clientes, proy3;
-GRANT SELECT, INSERT ON ventas, detalle_ventas TO rol_ventas, proy3;
-GRANT SELECT, INSERT ON compras, detalle_compras TO rol_inventario, proy3;
-GRANT EXECUTE ON FUNCTION fn_crear_cliente(TEXT, TEXT, TEXT) TO rol_clientes, rol_ventas, proy3;
-GRANT EXECUTE ON FUNCTION fn_crear_producto(TEXT, NUMERIC, NUMERIC, INT, INT, INT) TO rol_inventario, proy3;
-GRANT EXECUTE ON FUNCTION fn_registrar_venta(INT, INT, INT, INT) TO rol_ventas, proy3;
-GRANT SELECT ON vista_stock_bajo TO rol_reportes, proy3;
+-- Permisos sobre secuencias
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO rol_ventas, rol_inventario, rol_clientes, rol_reportes, rol_gerente, proy3;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON productos TO rol_inventario, rol_ventas, rol_reportes, rol_gerente, proy3;
+GRANT SELECT ON categorias, proveedores TO rol_inventario, rol_ventas, rol_reportes, rol_gerente, proy3;
+GRANT SELECT ON empleados TO rol_ventas, rol_reportes, rol_gerente, proy3;
+GRANT SELECT ON clientes TO rol_clientes, rol_ventas, rol_reportes, rol_gerente, proy3;
+GRANT SELECT, INSERT, DELETE ON clientes TO rol_clientes, rol_gerente, proy3;
+GRANT SELECT, INSERT ON ventas, detalle_ventas TO rol_ventas, rol_gerente, proy3;
+GRANT SELECT, INSERT ON compras, detalle_compras TO rol_inventario, rol_gerente, proy3;
+GRANT EXECUTE ON FUNCTION fn_crear_cliente(TEXT, TEXT, TEXT) TO rol_clientes, rol_ventas, rol_gerente, proy3;
+GRANT EXECUTE ON FUNCTION fn_crear_producto(TEXT, NUMERIC, NUMERIC, INT, INT, INT) TO rol_inventario, rol_gerente, proy3;
+GRANT EXECUTE ON FUNCTION fn_registrar_venta(INT, INT, INT, INT) TO rol_ventas, rol_gerente, proy3;
+GRANT EXECUTE ON FUNCTION fn_eliminar_cliente(INT) TO rol_clientes, rol_gerente, proy3;
+GRANT EXECUTE ON FUNCTION fn_reporte_stock_bajo() TO rol_reportes, rol_gerente, proy3;
+GRANT EXECUTE ON PROCEDURE sp_registrar_venta_proc(INT, INT, INT, INT) TO rol_ventas, rol_gerente, proy3;
+GRANT EXECUTE ON FUNCTION fn_obtener_cliente_info(INT) TO rol_clientes, rol_ventas, rol_reportes, rol_gerente, proy3;
+GRANT SELECT ON vista_stock_bajo TO rol_reportes, rol_gerente, proy3;

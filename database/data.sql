@@ -26,16 +26,25 @@ FROM generate_series(1,25) i;
 
 -- 4. EMPLEADOS
 
-INSERT INTO empleados (nombre_empleado, puesto, usuario, contrasena)
+INSERT INTO empleados (nombre_empleado, puesto, usuario, contrasena, rol_app)
 SELECT 
     'Empleado ' || i,
     CASE 
-        WHEN i % 3 = 0 THEN 'Gerente'
-        WHEN i % 3 = 1 THEN 'Ventas'
-        ELSE 'Caja'
+        WHEN i % 5 = 1 THEN 'Ventas'
+        WHEN i % 5 = 2 THEN 'Inventario'
+        WHEN i % 5 = 3 THEN 'Clientes'
+        WHEN i % 5 = 4 THEN 'Reportes'
+        ELSE 'Gerente'
     END,
     'user' || i,
-    '1234'
+    '1234',
+    CASE 
+        WHEN i % 5 = 1 THEN 'ventas'
+        WHEN i % 5 = 2 THEN 'inventario'
+        WHEN i % 5 = 3 THEN 'clientes'
+        WHEN i % 5 = 4 THEN 'reportes'
+        ELSE 'gerente'
+    END
 FROM generate_series(1,25) i;
 
 -- 5. PRODUCTOS
