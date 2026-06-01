@@ -30,18 +30,21 @@ Este proyecto extiende la aplicación de gestión de inventario y ventas para in
 - `docker-compose.yml`: orquesta `db`, `backend` y `frontend`.
 
 ## 🔧 Ejecución desde cero
-1. Copiar `.env.example` a `.env`.
-2. Si hay datos antiguos, limpiar volúmenes:
+1. Copiar `.env.example` a `.env` y ajustar valores si es necesario.
+2. Si ya hay una base de datos previa y quieres reiniciar los datos:
    ```bash
    docker compose down -v
    ```
-3. Levantar todo:
+3. Levantar todos los servicios con Docker Compose:
    ```bash
    docker compose up --build
    ```
-4. Abrir la aplicación en:
+4. Esperar a que los servicios arranquen y abrir la aplicación en:
    - Frontend: `http://localhost:8080`
    - Backend: `http://localhost:5000/api`
+5. Iniciar sesión con un usuario de ejemplo.
+
+> Para la entrega, si te piden el repositorio, enviar solo el enlace suele ser suficiente. No es necesario adjuntar más documentación fuera del README si ya incluye cómo ejecutar el proyecto.
 
 ## 🔐 Login y control de acceso por rol
 - La app ahora tiene login de empleados en frontend.
