@@ -43,10 +43,44 @@ Este proyecto extiende la aplicación de gestión de inventario y ventas para in
    - Frontend: `http://localhost:8080`
    - Backend: `http://localhost:5000/api`
 
+## 🔐 Login y control de acceso por rol
+- La app ahora tiene login de empleados en frontend.
+- Usuarios de ejemplo:
+  - `user1` / `1234` → rol `ventas`
+  - `user2` / `1234` → rol `inventario`
+  - `user3` / `1234` → rol `clientes`
+  - `user4` / `1234` → rol `reportes`
+  - `user5` / `1234` → rol `gerente`
+- El backend expone `/api/auth/login` y devuelve un token JWT.
+- Cada módulo del frontend se muestra u oculta según el rol del empleado.
+- Las rutas protegidas del backend verifican rol antes de ejecutar la acción.
+
+## 📚 Roles en la base de datos y permisos
+- `rol_ventas`:
+  - Tablas: `ventas`, `detalle_ventas`, `clientes`, `productos`, `empleados`, `categorias`, `proveedores`
+  - Operaciones: `SELECT`, `INSERT` en ventas y detalle_ventas; `SELECT` en clientes, productos, empleados, categorías y proveedores
+- `rol_inventario`:
+  - Tablas: `productos`, `compras`, `detalle_compras`, `categorias`, `proveedores`
+  - Operaciones: `SELECT`, `INSERT`, `UPDATE`, `DELETE` en productos; `SELECT`, `INSERT` en compras y detalle_compras
+- `rol_clientes`:
+  - Tablas: `clientes`, `ventas`, `detalle_ventas`
+  - Operaciones: `SELECT`, `INSERT`, `DELETE` en clientes; `SELECT`, `INSERT` en ventas y detalle_ventas
+- `rol_reportes`:
+  - Tablas: `productos`, `categorias`, `proveedores`, `clientes`, `empleados`, `vista_stock_bajo`
+  - Operaciones: `SELECT` sobre tablas de reporte y vista
+- `rol_gerente`:
+  - Tablas: todas las anteriores
+  - Operaciones: `SELECT`, `INSERT`, `UPDATE`, `DELETE` y ejecución de procedimientos para supervisión general
+- `proy3`:
+  - Usuario de conexión al DBMS.
+  - Hereda los roles de negocio y es el login obligatorio para la aplicación.
+
 ## 🌐 Endpoints principales
+- `POST /api/auth/login`
 - `GET /api/productos`
 - `POST /api/productos`
 - `GET /api/clientes`
+- `GET /api/clientes/info/:id`
 - `POST /api/clientes`
 - `DELETE /api/clientes/:id`
 - `POST /api/transaccion_venta`
@@ -55,6 +89,7 @@ Este proyecto extiende la aplicación de gestión de inventario y ventas para in
 - `GET /api/reporte/group`
 - `GET /api/reporte/cte`
 - `GET /api/reporte/view`
+- `GET /api/reporte/stock`
 
 ## 🛡️ Seguridad a nivel de base de datos
 - Roles creados con `CREATE ROLE` en `database/schema.sql`.
@@ -63,6 +98,9 @@ Este proyecto extiende la aplicación de gestión de inventario y ventas para in
 - Transacciones explícitas en backend con `SQLAlchemy`.
 
 ## 📁 Archivos importantes
+- `frontend/src/pages/Login.jsx`
+- `frontend/src/pages/NotAuthorized.jsx`
+- `frontend/src/context/AuthContext.jsx`
 - `backend/main.py`
 - `backend/models.py`
 - `database/schema.sql`
@@ -70,6 +108,11 @@ Este proyecto extiende la aplicación de gestión de inventario y ventas para in
 - `docker-compose.yml`
 
 ## 🧪 Pruebas
-1. `cd frontend`
-2. `npm install`
-3. `npx vitest run`
+- Frontend:
+  1. `cd frontend`
+  2. `npm install`
+  3. `npx vitest run`
+- Backend:
+  1. `cd backend`
+  2. `pip install -r requirements.txt`
+  3. `pytest tests/test_backend.py`
