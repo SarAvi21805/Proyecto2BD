@@ -41,7 +41,8 @@ export const Clientes = () => {
       setFormData({ nombre: '', nit: '', correo: '' }); // Limpiar formulario
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError("Error: El NIT ya podría existir en el sistema.");
+      const errorMsg = err.response?.data?.error || err.message || 'Error al registrar cliente';
+      setError(`Error: ${errorMsg}`);
     }
   };
 

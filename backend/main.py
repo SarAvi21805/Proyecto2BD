@@ -220,8 +220,8 @@ def crud_productos():
     data = request.json or {}
     with SessionLocal() as session:
         try:
-            set_db_role(session, user.get('rol_app'))
             with session.begin():
+                set_db_role(session, user.get('rol_app'))
                 session.execute(
                     text(
                         'SELECT fn_crear_producto(:nombre, :precio_costo, :precio_venta, :stock, :id_categoria, :id_proveedor)'
@@ -273,8 +273,8 @@ def crud_clientes():
     data = request.json or {}
     with SessionLocal() as session:
         try:
-            set_db_role(session, user.get('rol_app'))
             with session.begin():
+                set_db_role(session, user.get('rol_app'))
                 session.execute(
                     text('SELECT fn_crear_cliente(:nombre, :nit, :correo)'),
                     {
