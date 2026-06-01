@@ -44,8 +44,6 @@ Este proyecto extiende la aplicación de gestión de inventario y ventas para in
    - Backend: `http://localhost:5000/api`
 5. Iniciar sesión con un usuario de ejemplo.
 
-> Para la entrega, si te piden el repositorio, enviar solo el enlace suele ser suficiente. No es necesario adjuntar más documentación fuera del README si ya incluye cómo ejecutar el proyecto.
-
 ## 🔐 Login y control de acceso por rol
 - La app ahora tiene login de empleados en frontend.
 - Usuarios de ejemplo:
